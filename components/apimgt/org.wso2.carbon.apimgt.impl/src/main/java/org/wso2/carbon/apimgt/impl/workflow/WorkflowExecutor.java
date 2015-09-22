@@ -37,16 +37,17 @@ public abstract class WorkflowExecutor implements Serializable {
     protected String callbackURL;
 
 
-
     /**
      * Returns the workflow executor type. It is better to follow a convention as PRODUCT_ARTIFACT_ACTION for the
      * workflow type. Ex: AM_SUBSCRIPTION_CREATION.
+     *
      * @return - The workflow type.
      */
     public abstract String getWorkflowType();
 
     /**
      * Implements the workflow execution logic.
+     *
      * @param workflowDTO - The WorkflowDTO which contains workflow contextual information related to the workflow.
      * @throws WorkflowException - Thrown when the workflow execution was not fully performed.
      */
@@ -60,12 +61,38 @@ public abstract class WorkflowExecutor implements Serializable {
         }
     }
 
+
+    /**
+     * This method is used to execute the workflow and return a response type to continue after executing the workflow
+     *
+     * @param workflowDTO  The WorkflowDTO which contains workflow contextual information related to the workflow
+     * @param responseType Thrown when the workflow execution was not fully performed
+     * @return workflow response type
+     * @throws WorkflowException
+     */
+    public WorkflowResponse execute(WorkflowDTO workflowDTO, String responseType) throws WorkflowException {
+        ApiMgtDAO apiMgtDAO = new ApiMgtDAO();
+        try {
+            apiMgtDAO.addWorkflowEntry(workflowDTO);
+            publishEvents(workflowDTO);
+        } catch (APIManagementException e) {
+            throw new WorkflowException("Error while persisting workflow", e);
+        }
+
+        WorkflowResponse workflowResponse = null;
+        if(WorkflowConstants.RESPONSE_TYPE_HTTP.equals(responseType)){
+            workflowResponse = new HttpWorkflowResponse();
+        }
+        return workflowResponse;
+    }
+
     /**
      * Implements the workflow completion logic.
+     *
      * @param workflowDTO - The WorkflowDTO which contains workflow contextual information related to the workflow.
      * @throws WorkflowException - Thrown when the workflow completion was not fully performed.
      */
-    public void complete(WorkflowDTO workflowDTO) throws WorkflowException{
+    public void complete(WorkflowDTO workflowDTO) throws WorkflowException {
         ApiMgtDAO apiMgtDAO = new ApiMgtDAO();
         try {
             apiMgtDAO.updateWorkflowStatus(workflowDTO);
@@ -76,27 +103,50 @@ public abstract class WorkflowExecutor implements Serializable {
     }
 
     /**
-     * Returns the information of the workflows whose status' match the workflowStatus
-     * @param workflowStatus - The status of the workflows to match
-     * @return - List of workflows whose status' matches the workflowStatus param. 'null' if no matches found.
+     * This method is used to execute the workflow and return a response type to continue after executing the workflow
+     *
+     * @param workflowDTO  The WorkflowDTO which contains workflow contextual information related to the workflow
+     * @param responseType Thrown when the workflow execution was not fully performed
+     * @return workflow response type
+     * @throws WorkflowException
+     */
+    public WorkflowResponse complete(WorkflowDTO workflowDTO, String responseType) throws WorkflowException {
+        ApiMgtDAO apiMgtDAO = new ApiMgtDAO();
+        try {
+            apiMgtDAO.updateWorkflowStatus(workflowDTO);
+            publishEvents(workflowDTO);
+        } catch (APIManagementException e) {
+            throw new WorkflowException("Error while updating workflow", e);
+        }
+
+        WorkflowResponse workflowResponse = null;
+        if(WorkflowConstants.RESPONSE_TYPE_HTTP.equals(responseType)){
+            workflowResponse = new HttpWorkflowResponse();
+        }
+        return workflowResponse;
+    }
+
+    /**
+     * Returns the information of the workflow whose status' match the workflowStatus
+     *
+     * @param workflowStatus - The status of the workflow to match
+     * @return - List of workflow whose status' matches the workflowStatus param. 'null' if no matches found.
      * @throws WorkflowException - Thrown when the workflow information could not be retrieved.
      */
     public abstract List<WorkflowDTO> getWorkflowDetails(String workflowStatus) throws WorkflowException;
 
-
-
-
     /**
      * Method generates and returns UUID
+     *
      * @return UUID
      */
-    public String generateUUID(){
-        String UUID = UUIDGenerator.generateUUID();
-        return UUID;
+    public String generateUUID() {
+        return UUIDGenerator.generateUUID();
     }
 
     /**
      * Method for persisting Workflow DTO
+     *
      * @param workflowDTO
      * @throws WorkflowException
      */

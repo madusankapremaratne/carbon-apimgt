@@ -59,5 +59,8 @@ public class WorkflowConstants {
             "         <wor:workflowExternalRef>$3</wor:workflowExternalRef>\n" +
             "         <wor:callBackURL>$4</wor:callBackURL>\n" +
             "      </wor:UserSignupProcessRequest>";
+
+    public static final String RESPONSE_TYPE_HTTP = "http";
+    public static final String RESPONSE_TYPE_SIMPLE = "simple";
    
 }
