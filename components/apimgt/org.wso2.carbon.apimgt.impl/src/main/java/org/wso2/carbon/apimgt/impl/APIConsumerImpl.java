@@ -23,9 +23,7 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.json.simple.JSONObject;
 import org.wso2.carbon.CarbonConstants;
-import org.wso2.carbon.apimgt.api.APIConsumer;
-import org.wso2.carbon.apimgt.api.APIManagementException;
-import org.wso2.carbon.apimgt.api.LoginPostExecutor;
+import org.wso2.carbon.apimgt.api.*;
 import org.wso2.carbon.apimgt.api.model.*;
 import org.wso2.carbon.apimgt.api.model.Tag;
 import org.wso2.carbon.apimgt.impl.dao.ApiMgtDAO;
@@ -1900,11 +1898,13 @@ class APIConsumerImpl extends AbstractAPIManager implements APIConsumer {
         return isSubscribed;
     }
 
-    public String addSubscription(APIIdentifier identifier, String userId, int applicationId)
+    public WorkflowResponse addSubscription(APIIdentifier identifier, String userId, int applicationId)
             throws APIManagementException {
         API api = getAPI(identifier);
+        WorkflowResponse workflowResponse = null;
+        int subscriptionId;
         if (api.getStatus().equals(APIStatus.PUBLISHED)) {
-            int subscriptionId = apiMgtDAO.addSubscription(identifier, api.getContext(), applicationId,
+            subscriptionId = apiMgtDAO.addSubscription(identifier, api.getContext(), applicationId,
                     APIConstants.SubscriptionStatus.ON_HOLD);
 
             boolean isTenantFlowStarted = false;
@@ -1935,7 +1935,7 @@ class APIConsumerImpl extends AbstractAPIManager implements APIConsumer {
                 workflowDTO.setTierName(identifier.getTier());
                 workflowDTO.setApplicationName(apiMgtDAO.getApplicationNameFromId(applicationId));
                 workflowDTO.setSubscriber(userId);
-                addSubscriptionWFExecutor.execute(workflowDTO);
+                workflowResponse = addSubscriptionWFExecutor.execute(workflowDTO, "http");
             } catch (WorkflowException e) {
                 //If the workflow execution fails, roll back transaction by removing the subscription entry.
                 apiMgtDAO.removeSubscriptionById(subscriptionId);
@@ -1955,11 +1955,19 @@ class APIConsumerImpl extends AbstractAPIManager implements APIConsumer {
                 log.debug(logMessage);
             }
 
-            return apiMgtDAO.getSubscriptionStatusById(subscriptionId);
+            //return apiMgtDAO.getSubscriptionStatusById(subscriptionId);
         } else {
             throw new APIManagementException("Subscriptions not allowed on APIs in the state: " +
                     api.getStatus().getStatus());
         }
+
+        //need to set subscription state to json payload
+
+        HttpWorkflowResponse httpWorkflowResponse = (HttpWorkflowResponse)workflowResponse;
+        httpWorkflowResponse.setWorkflowOutput(apiMgtDAO.getSubscriptionStatusById(subscriptionId));
+
+        return workflowResponse;
+
     }
 
     public void removeSubscription(APIIdentifier identifier, String userId, int applicationId)

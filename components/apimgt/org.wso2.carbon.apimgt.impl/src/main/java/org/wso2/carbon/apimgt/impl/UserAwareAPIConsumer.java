@@ -20,6 +20,7 @@ import org.wso2.carbon.apimgt.api.APIManagementException;
 import org.wso2.carbon.apimgt.api.model.APIIdentifier;
 import org.wso2.carbon.apimgt.api.model.Application;
 import org.wso2.carbon.apimgt.impl.utils.APIUtil;
+import org.wso2.carbon.apimgt.api.WorkflowResponse;
 
 /**
  * User aware APIConsumer implementation which ensures that the invoking user has the
@@ -45,7 +46,7 @@ public class UserAwareAPIConsumer extends APIConsumerImpl {
     }
 
     @Override
-    public String addSubscription(APIIdentifier identifier,
+    public WorkflowResponse addSubscription(APIIdentifier identifier,
                                 String userId, int applicationId) throws APIManagementException {
         checkSubscribePermission();
         return super.addSubscription(identifier, userId, applicationId);

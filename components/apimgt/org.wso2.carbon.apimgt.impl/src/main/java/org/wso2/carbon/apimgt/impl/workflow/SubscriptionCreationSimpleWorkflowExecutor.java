@@ -21,6 +21,8 @@ package org.wso2.carbon.apimgt.impl.workflow;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.wso2.carbon.apimgt.api.APIManagementException;
+import org.wso2.carbon.apimgt.api.WorkflowResponse;
+import org.wso2.carbon.apimgt.api.WorkflowStatus;
 import org.wso2.carbon.apimgt.impl.APIConstants;
 import org.wso2.carbon.apimgt.impl.dao.ApiMgtDAO;
 import org.wso2.carbon.apimgt.impl.dto.WorkflowDTO;
@@ -42,21 +44,29 @@ public class SubscriptionCreationSimpleWorkflowExecutor extends WorkflowExecutor
     }
 
     @Override
-    public void execute(WorkflowDTO workflowDTO) throws WorkflowException {
+    public WorkflowResponse execute(WorkflowDTO workflowDTO, String responseType) throws WorkflowException {
         workflowDTO.setStatus(WorkflowStatus.APPROVED);
-        complete(workflowDTO);
+        WorkflowResponse workflowResponse = complete(workflowDTO, responseType);
         super.publishEvents(workflowDTO);
+
+        return workflowResponse;
     }
 
     @Override
-    public void complete(WorkflowDTO workflowDTO) throws WorkflowException{
+    public WorkflowResponse complete(WorkflowDTO workflowDTO, String responseType) throws WorkflowException{
         ApiMgtDAO apiMgtDAO = new ApiMgtDAO();
+        WorkflowResponse workflowResponse = null;
         try {
             apiMgtDAO.updateSubscriptionStatus(Integer.parseInt(workflowDTO.getWorkflowReference()),
                     APIConstants.SubscriptionStatus.UNBLOCKED);
+
+            if(WorkflowConstants.RESPONSE_TYPE_HTTP.equals(responseType)) {
+                workflowResponse = new HttpWorkflowResponse();
+            }
         } catch (APIManagementException e) {
             log.error("Could not complete subscription creation workflow", e);
             throw new WorkflowException("Could not complete subscription creation workflow", e);
         }
+        return workflowResponse;
     }
 }

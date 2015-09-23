@@ -16,13 +16,32 @@
 
 package org.wso2.carbon.apimgt.impl.workflow;
 
+import org.wso2.carbon.apimgt.api.WorkflowResponse;
+
 public class HttpWorkflowResponse implements WorkflowResponse {
 
     private String redirectUrl;
+    private String workflowOutput;
 
     @Override
     public String getJSONPayload() {
         return null;
+    }
+
+    public String getWorkflowOutput() {
+        return workflowOutput;
+    }
+
+    public void setWorkflowOutput(String workflowOutput) {
+        this.workflowOutput = workflowOutput;
+    }
+
+    public String getRedirectUrl() {
+        return redirectUrl;
+    }
+
+    public void setRedirectUrl(String redirectUrl) {
+        this.redirectUrl = redirectUrl;
     }
 
 }

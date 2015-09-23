@@ -14,7 +14,7 @@
 * limitations under the License.
 */
 
-package org.wso2.carbon.apimgt.impl.workflow;
+package org.wso2.carbon.apimgt.api;
 
 public interface WorkflowResponse {
 

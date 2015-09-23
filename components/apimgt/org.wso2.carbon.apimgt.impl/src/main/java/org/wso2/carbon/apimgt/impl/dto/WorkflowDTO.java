@@ -18,8 +18,7 @@
 
 package org.wso2.carbon.apimgt.impl.dto;
 
-import org.wso2.carbon.apimgt.impl.workflow.WorkflowStatus;
-
+import org.wso2.carbon.apimgt.api.WorkflowStatus;
 import java.io.Serializable;
 
 /**
