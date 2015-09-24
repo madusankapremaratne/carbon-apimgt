@@ -2494,7 +2494,7 @@ public class APIStoreHostObject extends ScriptableObject {
                     userId, applicationId);
 
             NativeObject nativeObject = new NativeObject();
-            nativeObject.put("redirectUrl", nativeObject, addSubscriptionResponse.getRedirectUrl());
+            nativeObject.put("redirectUrl", nativeObject, "https://github.com/wso2/carbon-apimgt");
             nativeObject.put("subscriptionStatus", nativeObject, addSubscriptionResponse.getWorkflowOutput());
 
             addSubscriptionResults.put(0, addSubscriptionResults, nativeObject);
