@@ -2072,7 +2072,6 @@ public class APIStoreHostObject extends ScriptableObject {
 
                 api = apiConsumer.getAPI(apiIdentifier);
                 if (username != null) {
-                    //TODO @sumedha : remove hardcoded tenant Id
                     isSubscribed = apiConsumer.isSubscribed(apiIdentifier, username);
                 }
 
