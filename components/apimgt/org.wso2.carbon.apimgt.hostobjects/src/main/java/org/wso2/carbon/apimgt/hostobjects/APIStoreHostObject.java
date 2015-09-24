@@ -32,37 +32,16 @@ import org.jaggeryjs.scriptengine.exceptions.ScriptException;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
 import org.json.simple.parser.ParseException;
-import org.mozilla.javascript.Context;
-import org.mozilla.javascript.Function;
-import org.mozilla.javascript.NativeArray;
-import org.mozilla.javascript.NativeObject;
-import org.mozilla.javascript.Scriptable;
-import org.mozilla.javascript.ScriptableObject;
+import org.mozilla.javascript.*;
 import org.wso2.carbon.apimgt.api.APIConsumer;
 import org.wso2.carbon.apimgt.api.APIManagementException;
 import org.wso2.carbon.apimgt.api.ApplicationNotFoundException;
-import org.wso2.carbon.apimgt.api.WorkflowResponse;
 import org.wso2.carbon.apimgt.api.WorkflowStatus;
-import org.wso2.carbon.apimgt.api.model.API;
-import org.wso2.carbon.apimgt.api.model.APIIdentifier;
-import org.wso2.carbon.apimgt.api.model.APIKey;
-import org.wso2.carbon.apimgt.api.model.APIRating;
-import org.wso2.carbon.apimgt.api.model.APIStatus;
-import org.wso2.carbon.apimgt.api.model.AccessTokenInfo;
-import org.wso2.carbon.apimgt.api.model.Application;
-import org.wso2.carbon.apimgt.api.model.Comment;
-import org.wso2.carbon.apimgt.api.model.Documentation;
-import org.wso2.carbon.apimgt.api.model.DocumentationType;
-import org.wso2.carbon.apimgt.api.model.OAuthApplicationInfo;
-import org.wso2.carbon.apimgt.api.model.Scope;
-import org.wso2.carbon.apimgt.api.model.SubscribedAPI;
-import org.wso2.carbon.apimgt.api.model.Subscriber;
-import org.wso2.carbon.apimgt.api.model.Tag;
-import org.wso2.carbon.apimgt.api.model.Tier;
-import org.wso2.carbon.apimgt.api.model.URITemplate;
+import org.wso2.carbon.apimgt.api.model.*;
 import org.wso2.carbon.apimgt.hostobjects.internal.HostObjectComponent;
 import org.wso2.carbon.apimgt.hostobjects.internal.ServiceReferenceHolder;
 import org.wso2.carbon.apimgt.impl.APIConstants;
+import org.wso2.carbon.apimgt.impl.APIConstants.ApplicationStatus;
 import org.wso2.carbon.apimgt.impl.APIManagerConfiguration;
 import org.wso2.carbon.apimgt.impl.APIManagerFactory;
 import org.wso2.carbon.apimgt.impl.UserAwareAPIConsumer;
@@ -73,19 +52,11 @@ import org.wso2.carbon.apimgt.impl.dto.WorkflowDTO;
 import org.wso2.carbon.apimgt.impl.dto.xsd.APIInfoDTO;
 import org.wso2.carbon.apimgt.impl.utils.APIUtil;
 import org.wso2.carbon.apimgt.impl.utils.SelfSignUpUtil;
-import org.wso2.carbon.apimgt.impl.workflow.WorkflowConstants;
-import org.wso2.carbon.apimgt.impl.workflow.WorkflowException;
-import org.wso2.carbon.apimgt.impl.workflow.WorkflowExecutor;
-import org.wso2.carbon.apimgt.impl.workflow.WorkflowExecutorFactory;
+import org.wso2.carbon.apimgt.impl.workflow.*;
 import org.wso2.carbon.apimgt.keymgt.client.APIAuthenticationServiceClient;
 import org.wso2.carbon.apimgt.keymgt.client.SubscriberKeyMgtClient;
 import org.wso2.carbon.apimgt.usage.client.APIUsageStatisticsClient;
-import org.wso2.carbon.apimgt.usage.client.dto.APIResponseFaultCountDTO;
-import org.wso2.carbon.apimgt.usage.client.dto.APIUsageDTO;
-import org.wso2.carbon.apimgt.usage.client.dto.APIVersionUserUsageDTO;
-import org.wso2.carbon.apimgt.usage.client.dto.AppCallTypeDTO;
-import org.wso2.carbon.apimgt.usage.client.dto.AppRegisteredUsersDTO;
-import org.wso2.carbon.apimgt.usage.client.dto.AppUsageDTO;
+import org.wso2.carbon.apimgt.usage.client.dto.*;
 import org.wso2.carbon.apimgt.usage.client.exception.APIMgtUsageQueryServiceClientException;
 import org.wso2.carbon.authenticator.stub.AuthenticationAdminStub;
 import org.wso2.carbon.authenticator.stub.LoginAuthenticationExceptionException;
@@ -93,7 +64,10 @@ import org.wso2.carbon.base.MultitenantConstants;
 import org.wso2.carbon.context.PrivilegedCarbonContext;
 import org.wso2.carbon.core.util.PermissionUpdateUtil;
 import org.wso2.carbon.identity.oauth.config.OAuthServerConfiguration;
-import org.wso2.carbon.apimgt.impl.APIConstants.ApplicationStatus;
+import org.wso2.carbon.identity.user.registration.stub.UserRegistrationAdminServiceException;
+import org.wso2.carbon.identity.user.registration.stub.UserRegistrationAdminServiceStub;
+import org.wso2.carbon.identity.user.registration.stub.dto.UserDTO;
+import org.wso2.carbon.identity.user.registration.stub.dto.UserFieldDTO;
 import org.wso2.carbon.registry.core.exceptions.RegistryException;
 import org.wso2.carbon.user.core.UserCoreConstants;
 import org.wso2.carbon.user.core.UserRealm;
@@ -104,31 +78,13 @@ import org.wso2.carbon.user.mgt.stub.UserAdminStub;
 import org.wso2.carbon.user.mgt.stub.UserAdminUserAdminException;
 import org.wso2.carbon.user.mgt.stub.types.carbon.FlaggedName;
 import org.wso2.carbon.utils.CarbonUtils;
-import org.wso2.carbon.identity.user.registration.stub.UserRegistrationAdminServiceException;
-import org.wso2.carbon.identity.user.registration.stub.UserRegistrationAdminServiceStub;
-import org.wso2.carbon.identity.user.registration.stub.dto.UserDTO;
-import org.wso2.carbon.identity.user.registration.stub.dto.UserFieldDTO;
 import org.wso2.carbon.utils.multitenancy.MultitenantUtils;
 
-import java.net.MalformedURLException;
-import java.net.URI;
-import java.net.URISyntaxException;
-import java.net.URL;
-import java.net.URLDecoder;
+import java.net.*;
 import java.rmi.RemoteException;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.LinkedHashSet;
-import java.util.List;
-import java.util.ListIterator;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 
 
 public class APIStoreHostObject extends ScriptableObject {
@@ -2461,15 +2417,12 @@ public class APIStoreHostObject extends ScriptableObject {
         return myn;
     }
 
-    public static String jsFunction_addSubscription(Context cx,
+    public static NativeArray jsFunction_addSubscription(Context cx,
                                                     Scriptable thisObj, Object[] args, Function funObj)
             throws APIManagementException {
-        if (args == null || args.length == 0) {
-            return "";
-        }
 
+        NativeArray addSubscriptionResults = new NativeArray(0);
         APIConsumer apiConsumer = getAPIConsumer(thisObj);
-
         String providerName = (String) args[0];
         providerName = APIUtil.replaceEmailDomain(providerName);
         String apiName = (String) args[1];
@@ -2537,19 +2490,24 @@ public class APIStoreHostObject extends ScriptableObject {
                 throw new APIManagementException("Subscription is not allowed for " + userDomain);
             }
             apiIdentifier.setTier(tier);
-            WorkflowResponse subsStatus = apiConsumer.addSubscription(apiIdentifier, userId, applicationId);
+            HttpWorkflowResponse addSubscriptionResponse = (HttpWorkflowResponse) apiConsumer.addSubscription(apiIdentifier,
+                    userId, applicationId);
 
-            //convert workflow response to string and return
+            NativeObject nativeObject = new NativeObject();
+            nativeObject.put("redirectUrl", nativeObject, addSubscriptionResponse.getRedirectUrl());
+            nativeObject.put("subscriptionStatus", nativeObject, addSubscriptionResponse.getWorkflowOutput());
 
-            return null;
+            addSubscriptionResults.put(0, addSubscriptionResults, nativeObject);
+
         } catch (APIManagementException e) {
             handleException("Error while adding subscription for user: " + userId + ". Reason: " + e.getMessage());
-            return null;
         } finally {
             if (isTenantFlowStarted) {
                 PrivilegedCarbonContext.endTenantFlow();
             }
         }
+
+        return addSubscriptionResults;
     }
 
     public static boolean jsFunction_addAPISubscription(Context cx,
