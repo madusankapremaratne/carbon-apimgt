@@ -18,5 +18,7 @@ package org.wso2.carbon.apimgt.api;
 
 public interface WorkflowResponse {
 
+    public String getWorkflowOutput();
+
     public String getJSONPayload();
 }

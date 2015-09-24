@@ -2494,7 +2494,11 @@ public class APIStoreHostObject extends ScriptableObject {
                     userId, applicationId);
 
             NativeObject nativeObject = new NativeObject();
-            nativeObject.put("redirectUrl", nativeObject, "https://github.com/wso2/carbon-apimgt");
+            String redirectUrl = addSubscriptionResponse.getRedirectUrl();
+            if (redirectUrl == null) {
+                log.warn("Redirect url is not specified in http workflow response");
+            }
+            nativeObject.put("redirectUrl", nativeObject, redirectUrl);
             nativeObject.put("subscriptionStatus", nativeObject, addSubscriptionResponse.getWorkflowOutput());
 
             addSubscriptionResults.put(0, addSubscriptionResults, nativeObject);
@@ -4435,10 +4439,6 @@ public class APIStoreHostObject extends ScriptableObject {
     /**
      * Check the APIs' adding comment is turned on or off
      *
-     * @param cx
-     * @param thisObj
-     * @param args
-     * @param funObj
      * @return
      * @throws APIManagementException
      */
@@ -4462,10 +4462,6 @@ public class APIStoreHostObject extends ScriptableObject {
     /**
      * Check the APIs' adding rating facility is turned on or off
      *
-     * @param cx
-     * @param thisObj
-     * @param args
-     * @param funObj
      * @return
      * @throws APIManagementException
      */

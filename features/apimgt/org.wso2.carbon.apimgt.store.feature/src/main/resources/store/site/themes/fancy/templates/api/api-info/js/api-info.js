@@ -38,9 +38,9 @@ function triggerSubscribe() {
             } else {
                 //add another condition to prevent unnecessary redirection
                 if (result.status[0].redirectUrl != null) {
-                    $('#messageModal').html($('#confirmation-data').html());
+                    $('#messageModal').html($('#redirection-data').html());
                     $('#messageModal h3.modal-title').html("Redirection");
-                    $('#messageModal div.modal-body').html("Hello");
+                    $('#messageModal div.modal-body').html("You will be redirected from WSO2 API Manager.");
                     $('#messageModal a.btn-primary').click(function () {
                         location.href = result.status[0].redirectUrl;
                     });
