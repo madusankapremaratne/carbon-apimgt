@@ -61,7 +61,13 @@ import org.wso2.carbon.apimgt.impl.utils.APIUtil;
 import org.wso2.carbon.apimgt.impl.utils.APIVersionComparator;
 import org.wso2.carbon.apimgt.impl.utils.ApplicationUtils;
 import org.wso2.carbon.apimgt.impl.utils.LRUCache;
-import org.wso2.carbon.apimgt.impl.workflow.*;
+import org.wso2.carbon.apimgt.impl.workflow.AbstractApplicationRegistrationWorkflowExecutor;
+import org.wso2.carbon.apimgt.impl.workflow.HttpWorkflowResponse;
+import org.wso2.carbon.apimgt.impl.workflow.NonHttpWorkflowResponse;
+import org.wso2.carbon.apimgt.impl.workflow.WorkflowConstants;
+import org.wso2.carbon.apimgt.impl.workflow.WorkflowException;
+import org.wso2.carbon.apimgt.impl.workflow.WorkflowExecutor;
+import org.wso2.carbon.apimgt.impl.workflow.WorkflowExecutorFactory;
 import org.wso2.carbon.apimgt.keymgt.stub.types.carbon.ApplicationKeysDTO;
 import org.wso2.carbon.context.PrivilegedCarbonContext;
 import org.wso2.carbon.governance.api.common.dataobjects.GovernanceArtifact;
@@ -2004,7 +2010,7 @@ class APIConsumerImpl extends AbstractAPIManager implements APIConsumer {
             throw new APIManagementException("Subscriptions not allowed on APIs in the state: " + api.getStatus().getStatus());
         }
 
-        if("http".equals(responseType)) {
+        if(WorkflowConstants.RESPONSE_TYPE_HTTP.equals(responseType)) {
             HttpWorkflowResponse httpWorkflowResponse = (HttpWorkflowResponse)workflowResponse;
             httpWorkflowResponse.setWorkflowOutput(apiMgtDAO.getSubscriptionStatusById(subscriptionId));
         } else {
