@@ -80,9 +80,11 @@ public abstract class WorkflowExecutor implements Serializable {
             throw new WorkflowException("Error while persisting workflow", e);
         }
 
-        WorkflowResponse workflowResponse = null;
+        WorkflowResponse workflowResponse;
         if(WorkflowConstants.RESPONSE_TYPE_HTTP.equals(responseType)){
             workflowResponse = new HttpWorkflowResponse();
+        } else {
+            workflowResponse = new NonHttpWorkflowResponse();
         }
         return workflowResponse;
     }
@@ -120,9 +122,11 @@ public abstract class WorkflowExecutor implements Serializable {
             throw new WorkflowException("Error while updating workflow", e);
         }
 
-        WorkflowResponse workflowResponse = null;
+        WorkflowResponse workflowResponse;
         if(WorkflowConstants.RESPONSE_TYPE_HTTP.equals(responseType)){
             workflowResponse = new HttpWorkflowResponse();
+        } else {
+            workflowResponse = new NonHttpWorkflowResponse();
         }
         return workflowResponse;
     }

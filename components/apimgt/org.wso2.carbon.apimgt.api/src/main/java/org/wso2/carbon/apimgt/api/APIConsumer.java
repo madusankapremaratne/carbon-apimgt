@@ -238,7 +238,7 @@ public interface APIConsumer extends APIManager {
      * @return String subscription status
      * @throws APIManagementException if failed to add subscription details to database
      */
-    public WorkflowResponse addSubscription(APIIdentifier identifier, String userId, int applicationId)
+    public WorkflowResponse addSubscription(APIIdentifier identifier, String userId, int applicationId, String responseType)
             throws APIManagementException;
 
     /**

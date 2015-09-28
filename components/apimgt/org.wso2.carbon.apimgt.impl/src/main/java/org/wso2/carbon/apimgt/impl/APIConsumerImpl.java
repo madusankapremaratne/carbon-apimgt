@@ -61,12 +61,7 @@ import org.wso2.carbon.apimgt.impl.utils.APIUtil;
 import org.wso2.carbon.apimgt.impl.utils.APIVersionComparator;
 import org.wso2.carbon.apimgt.impl.utils.ApplicationUtils;
 import org.wso2.carbon.apimgt.impl.utils.LRUCache;
-import org.wso2.carbon.apimgt.impl.workflow.AbstractApplicationRegistrationWorkflowExecutor;
-import org.wso2.carbon.apimgt.impl.workflow.HttpWorkflowResponse;
-import org.wso2.carbon.apimgt.impl.workflow.WorkflowConstants;
-import org.wso2.carbon.apimgt.impl.workflow.WorkflowException;
-import org.wso2.carbon.apimgt.impl.workflow.WorkflowExecutor;
-import org.wso2.carbon.apimgt.impl.workflow.WorkflowExecutorFactory;
+import org.wso2.carbon.apimgt.impl.workflow.*;
 import org.wso2.carbon.apimgt.keymgt.stub.types.carbon.ApplicationKeysDTO;
 import org.wso2.carbon.context.PrivilegedCarbonContext;
 import org.wso2.carbon.governance.api.common.dataobjects.GovernanceArtifact;
@@ -1947,7 +1942,7 @@ class APIConsumerImpl extends AbstractAPIManager implements APIConsumer {
         return isSubscribed;
     }
 
-    public WorkflowResponse addSubscription(APIIdentifier identifier, String userId, int applicationId)
+    public WorkflowResponse addSubscription(APIIdentifier identifier, String userId, int applicationId, String responseType)
             throws APIManagementException {
         API api = getAPI(identifier);
         WorkflowResponse workflowResponse = null;
@@ -1984,7 +1979,7 @@ class APIConsumerImpl extends AbstractAPIManager implements APIConsumer {
                 workflowDTO.setTierName(identifier.getTier());
                 workflowDTO.setApplicationName(apiMgtDAO.getApplicationNameFromId(applicationId));
                 workflowDTO.setSubscriber(userId);
-                workflowResponse = addSubscriptionWFExecutor.execute(workflowDTO, "http");
+                workflowResponse = addSubscriptionWFExecutor.execute(workflowDTO, responseType);
             } catch (WorkflowException e) {
                 //If the workflow execution fails, roll back transaction by removing the subscription entry.
                 apiMgtDAO.removeSubscriptionById(subscriptionId);
@@ -2000,20 +1995,22 @@ class APIConsumerImpl extends AbstractAPIManager implements APIConsumer {
                 invalidateCachedKeys(applicationId);
             }
             if (log.isDebugEnabled()) {
-                String logMessage = "API Name: " + identifier.getApiName() + ", API Version "+identifier.getVersion()+" subscribe by " + userId + " for app "+ apiMgtDAO.getApplicationNameFromId(applicationId);
+                String logMessage = "API Name: " + identifier.getApiName() + ", API Version " + identifier.getVersion()
+                        + " subscribe by " + userId + " for app " + apiMgtDAO.getApplicationNameFromId(applicationId);
                 log.debug(logMessage);
             }
 
-            //return apiMgtDAO.getSubscriptionStatusById(subscriptionId);
         } else {
-            throw new APIManagementException("Subscriptions not allowed on APIs in the state: " +
-                    api.getStatus().getStatus());
+            throw new APIManagementException("Subscriptions not allowed on APIs in the state: " + api.getStatus().getStatus());
         }
 
-        //need to set subscription state to json payload
-
-        HttpWorkflowResponse httpWorkflowResponse = (HttpWorkflowResponse)workflowResponse;
-        httpWorkflowResponse.setWorkflowOutput(apiMgtDAO.getSubscriptionStatusById(subscriptionId));
+        if("http".equals(responseType)) {
+            HttpWorkflowResponse httpWorkflowResponse = (HttpWorkflowResponse)workflowResponse;
+            httpWorkflowResponse.setWorkflowOutput(apiMgtDAO.getSubscriptionStatusById(subscriptionId));
+        } else {
+            NonHttpWorkflowResponse nonHttpWorkflowResponse = (NonHttpWorkflowResponse)workflowResponse;
+            nonHttpWorkflowResponse.setWorkflowOutput(apiMgtDAO.getSubscriptionStatusById(subscriptionId));
+        }
 
         return workflowResponse;
 
@@ -2027,7 +2024,8 @@ class APIConsumerImpl extends AbstractAPIManager implements APIConsumer {
         }
         if(log.isDebugEnabled()){
             String appName = apiMgtDAO.getApplicationNameFromId(applicationId);
-            String logMessage = "API Name: " + identifier.getApiName() + ", API Version "+identifier.getVersion()+" subscription removed by " + userId +" from app "+ appName;
+            String logMessage = "API Name: " + identifier.getApiName() + ", API Version " + identifier.getVersion()
+                    + " subscription removed by " + userId + " from app " + appName;
             log.debug(logMessage);
         }
     }

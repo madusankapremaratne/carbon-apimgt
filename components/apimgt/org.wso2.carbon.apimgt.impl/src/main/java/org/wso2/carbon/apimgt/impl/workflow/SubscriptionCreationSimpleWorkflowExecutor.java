@@ -55,13 +55,15 @@ public class SubscriptionCreationSimpleWorkflowExecutor extends WorkflowExecutor
     @Override
     public WorkflowResponse complete(WorkflowDTO workflowDTO, String responseType) throws WorkflowException{
         ApiMgtDAO apiMgtDAO = new ApiMgtDAO();
-        WorkflowResponse workflowResponse = null;
+        WorkflowResponse workflowResponse;
         try {
             apiMgtDAO.updateSubscriptionStatus(Integer.parseInt(workflowDTO.getWorkflowReference()),
                     APIConstants.SubscriptionStatus.UNBLOCKED);
 
             if(WorkflowConstants.RESPONSE_TYPE_HTTP.equals(responseType)) {
                 workflowResponse = new HttpWorkflowResponse();
+            } else {
+                workflowResponse = new NonHttpWorkflowResponse();
             }
         } catch (APIManagementException e) {
             log.error("Could not complete subscription creation workflow", e);

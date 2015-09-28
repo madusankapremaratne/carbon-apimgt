@@ -33,10 +33,7 @@ import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
 import org.json.simple.parser.ParseException;
 import org.mozilla.javascript.*;
-import org.wso2.carbon.apimgt.api.APIConsumer;
-import org.wso2.carbon.apimgt.api.APIManagementException;
-import org.wso2.carbon.apimgt.api.ApplicationNotFoundException;
-import org.wso2.carbon.apimgt.api.WorkflowStatus;
+import org.wso2.carbon.apimgt.api.*;
 import org.wso2.carbon.apimgt.api.model.*;
 import org.wso2.carbon.apimgt.hostobjects.internal.HostObjectComponent;
 import org.wso2.carbon.apimgt.hostobjects.internal.ServiceReferenceHolder;
@@ -2431,6 +2428,7 @@ public class APIStoreHostObject extends ScriptableObject {
         String userId = (String) args[5];
         APIIdentifier apiIdentifier = new APIIdentifier(providerName, apiName, version);
         boolean isTenantFlowStarted = false;
+        String redirectUrl = null;
         try {
             String tenantDomain = MultitenantUtils.getTenantDomain(APIUtil.replaceEmailDomainBack(providerName));
             if (tenantDomain != null && !MultitenantConstants.SUPER_TENANT_DOMAIN_NAME.equals(tenantDomain)) {
@@ -2489,13 +2487,15 @@ public class APIStoreHostObject extends ScriptableObject {
                 throw new APIManagementException("Subscription is not allowed for " + userDomain);
             }
             apiIdentifier.setTier(tier);
-            HttpWorkflowResponse addSubscriptionResponse = (HttpWorkflowResponse) apiConsumer.addSubscription(apiIdentifier,
-                    userId, applicationId);
 
             NativeObject nativeObject = new NativeObject();
-            String redirectUrl = addSubscriptionResponse.getRedirectUrl();
-            if (redirectUrl == null) {
-                log.warn("Redirect url is not specified in http workflow response");
+            //read response type from request
+            WorkflowResponse addSubscriptionResponse = apiConsumer.addSubscription(apiIdentifier, userId, applicationId, "simple");
+            if(addSubscriptionResponse instanceof HttpWorkflowResponse) {
+                redirectUrl = ((HttpWorkflowResponse) addSubscriptionResponse).getRedirectUrl();
+                if (redirectUrl == null) {
+                    log.warn("Redirect url is not specified in http workflow response");
+                }
             }
             nativeObject.put("redirectUrl", nativeObject, redirectUrl);
             nativeObject.put("subscriptionStatus", nativeObject, addSubscriptionResponse.getWorkflowOutput());
@@ -2534,7 +2534,7 @@ public class APIStoreHostObject extends ScriptableObject {
             apiIdentifier.setTier(tier);
             try {
                 int applicationId = APIUtil.getApplicationId(applicationName, userId);
-                apiConsumer.addSubscription(apiIdentifier, userId, applicationId);
+                apiConsumer.addSubscription(apiIdentifier, userId, applicationId, "http");
             } catch (APIManagementException e) {
                 handleException("Error while adding the subscription for user: " + userId, e);
             }

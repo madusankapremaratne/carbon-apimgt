@@ -47,9 +47,9 @@ public class UserAwareAPIConsumer extends APIConsumerImpl {
 
     @Override
     public WorkflowResponse addSubscription(APIIdentifier identifier,
-                                String userId, int applicationId) throws APIManagementException {
+                                String userId, int applicationId, String responseType) throws APIManagementException {
         checkSubscribePermission();
-        return super.addSubscription(identifier, userId, applicationId);
+        return super.addSubscription(identifier, userId, applicationId, responseType);
     }
 
     @Override
