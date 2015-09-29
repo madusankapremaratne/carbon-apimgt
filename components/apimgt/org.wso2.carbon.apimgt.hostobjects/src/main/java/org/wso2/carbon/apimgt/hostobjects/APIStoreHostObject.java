@@ -2514,8 +2514,8 @@ public class APIStoreHostObject extends ScriptableObject {
         return addSubscriptionResults;
     }
 
-    public static boolean jsFunction_addAPISubscription(Context cx,
-                                                        Scriptable thisObj, Object[] args, Function funObj) throws APIManagementException {
+    public static boolean jsFunction_addAPISubscription(Context cx, Scriptable thisObj, Object[] args, Function funObj)
+            throws APIManagementException {
         if (!isStringArray(args)) {
             throw new APIManagementException("Invalid input parameters for AddAPISubscription method");
         }
@@ -2527,6 +2527,7 @@ public class APIStoreHostObject extends ScriptableObject {
         String tier = args[3].toString();
         String applicationName = ((String) args[4]);
         String userId = args[5].toString();
+        String responseType = (String) args[6];
         APIIdentifier apiIdentifier = new APIIdentifier(providerName, apiName, version);
 
         //Check whether tier is denied or not before adding
@@ -2535,7 +2536,7 @@ public class APIStoreHostObject extends ScriptableObject {
             apiIdentifier.setTier(tier);
             try {
                 int applicationId = APIUtil.getApplicationId(applicationName, userId);
-                apiConsumer.addSubscription(apiIdentifier, userId, applicationId, "http");
+                apiConsumer.addSubscription(apiIdentifier, userId, applicationId, responseType);
             } catch (APIManagementException e) {
                 handleException("Error while adding the subscription for user: " + userId, e);
             }
