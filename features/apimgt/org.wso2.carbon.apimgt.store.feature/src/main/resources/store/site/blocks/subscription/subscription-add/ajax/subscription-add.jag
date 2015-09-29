@@ -4,7 +4,7 @@ include("/jagg/jagg.jag");
     var site = require("/site/conf/site.json");
     var ssoEnabled = site.ssoConfiguration.enabled;
     response.contentType = "application/json; charset=UTF-8";
-    var mod, obj, name, version, provider, tier, application, applicationId, tokenScope, applicationName, context, result,
+    var mod, obj, name, responseType, version, provider, tier, application, applicationId, tokenScope, applicationName, context, result,
             user = jagg.getUser(),
             msg = require("/site/conf/ui-messages.jag"),
             action = request.getParameter("action");
@@ -45,13 +45,14 @@ include("/jagg/jagg.jag");
         tier = request.getParameter("tier");
         applicationId = parseInt(request.getParameter("applicationId"), 10);
         username = user.username;
+        responseType = request.getParameter("responseType");
 
         mod = jagg.module("subscription");
         result = mod.addSubscription({
             name:name,
             version:version,
             provider:provider
-        }, tier, applicationId, username);
+        }, tier, applicationId, username, responseType);
 
         if (result.error) {
         	var message = result.message;
@@ -88,13 +89,14 @@ include("/jagg/jagg.jag");
         tier = request.getParameter("tier");
         applicationName = request.getParameter("applicationName");
         username = user.username;
+        responseType = request.getParameter("responseType");
 
         mod = jagg.module("subscription");
         result = mod.addAPISubscription({
             name:name,
             version:version,
             provider:provider
-        }, tier, applicationName, username);
+        }, tier, applicationName, username, responseType);
 
         if (result.error) {
             obj = {

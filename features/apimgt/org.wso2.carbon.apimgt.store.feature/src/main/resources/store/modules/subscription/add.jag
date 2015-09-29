@@ -1,12 +1,12 @@
 <%
-var addSubscription = function (api, tier, applicationId, username) {
+var addSubscription = function (api, tier, applicationId, username, responseType) {
     var status,
             log = new Log(),
             store = jagg.module("manager").getAPIStoreObj();
 
     try {
         var groupingId = session.get("groupId");
-        status = store.addSubscription(api.provider, api.name, api.version, tier, applicationId, username);
+        status = store.addSubscription(api.provider, api.name, api.version, tier, applicationId, username, responseType);
         if (log.isDebugEnabled()) {
             log.debug("addAPISubscription");
         }
@@ -24,13 +24,13 @@ var addSubscription = function (api, tier, applicationId, username) {
     }
 };
 
-var addAPISubscription = function (api, tier, applicationName, username) {
+var addAPISubscription = function (api, tier, applicationName, username, responseType) {
     var status,
             log = new Log(),
             store = jagg.module("manager").getAPIStoreObj();
 
     try {
-        status = store.addAPISubscription(api.provider, api.name, api.version, tier, applicationName, username);
+        status = store.addAPISubscription(api.provider, api.name, api.version, tier, applicationName, username, responseType);
         if (log.isDebugEnabled()) {
             log.debug("addAPISubscription");
         }

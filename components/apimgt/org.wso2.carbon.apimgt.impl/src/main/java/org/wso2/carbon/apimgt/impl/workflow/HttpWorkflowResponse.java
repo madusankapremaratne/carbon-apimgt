@@ -20,7 +20,7 @@ import org.wso2.carbon.apimgt.api.WorkflowResponse;
 
 public class HttpWorkflowResponse implements WorkflowResponse {
 
-    private String redirectUrl;
+    private String redirectUrl = "http://google.lk";
     private String workflowOutput;
 
     @Override

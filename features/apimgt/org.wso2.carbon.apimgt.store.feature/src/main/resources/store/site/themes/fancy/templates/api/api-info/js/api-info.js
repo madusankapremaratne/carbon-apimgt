@@ -22,7 +22,8 @@ function triggerSubscribe() {
         name:api.name,
         version:api.version,
         provider:api.provider,
-        tier:tier
+        tier:tier,
+        responseType:'http'
     }, function (result) {
         $("#subscribe-button").html('Subscribe');
         $("#subscribe-button").removeAttr('disabled');

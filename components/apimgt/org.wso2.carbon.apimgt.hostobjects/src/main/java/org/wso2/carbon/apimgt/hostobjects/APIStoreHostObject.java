@@ -2426,9 +2426,11 @@ public class APIStoreHostObject extends ScriptableObject {
         String tier = (String) args[3];
         int applicationId = ((Number) args[4]).intValue();
         String userId = (String) args[5];
+        String responseType = (String) args[6];
+        String redirectUrl = null;
+
         APIIdentifier apiIdentifier = new APIIdentifier(providerName, apiName, version);
         boolean isTenantFlowStarted = false;
-        String redirectUrl = null;
         try {
             String tenantDomain = MultitenantUtils.getTenantDomain(APIUtil.replaceEmailDomainBack(providerName));
             if (tenantDomain != null && !MultitenantConstants.SUPER_TENANT_DOMAIN_NAME.equals(tenantDomain)) {
@@ -2453,7 +2455,7 @@ public class APIStoreHostObject extends ScriptableObject {
             }
             if (!isTierAllowed) {
                 throw new APIManagementException("Tier " + tier + " is not allowed for API " + apiName + "-" + version + ". Only "
-                        + Arrays.toString(allowedTierList.toArray()) + " Tiers are alllowed.");
+                        + Arrays.toString(allowedTierList.toArray()) + " Tiers are allowed.");
             }
             if (apiConsumer.isTierDeneid(tier)) {
                 throw new APIManagementException("Tier " + tier + " is not allowed for user " + userId);
@@ -2489,8 +2491,7 @@ public class APIStoreHostObject extends ScriptableObject {
             apiIdentifier.setTier(tier);
 
             NativeObject nativeObject = new NativeObject();
-            //read response type from request
-            WorkflowResponse addSubscriptionResponse = apiConsumer.addSubscription(apiIdentifier, userId, applicationId, "simple");
+            WorkflowResponse addSubscriptionResponse = apiConsumer.addSubscription(apiIdentifier, userId, applicationId, responseType);
             if(addSubscriptionResponse instanceof HttpWorkflowResponse) {
                 redirectUrl = ((HttpWorkflowResponse) addSubscriptionResponse).getRedirectUrl();
                 if (redirectUrl == null) {
