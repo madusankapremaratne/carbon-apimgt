@@ -29,6 +29,7 @@ import org.apache.axis2.transport.http.HttpTransportProperties;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.wso2.carbon.apimgt.api.APIManagementException;
+import org.wso2.carbon.apimgt.api.WorkflowResponse;
 import org.wso2.carbon.apimgt.api.WorkflowStatus;
 import org.wso2.carbon.apimgt.impl.APIConstants;
 import org.wso2.carbon.apimgt.impl.dao.ApiMgtDAO;
@@ -63,8 +64,9 @@ public class SubscriptionCreationWSWorkflowExecutor extends WorkflowExecutor{
     }
 
     @Override
-    public void execute(WorkflowDTO workflowDTO) throws WorkflowException{
+    public WorkflowResponse execute(WorkflowDTO workflowDTO, String responseType) throws WorkflowException{
 
+        WorkflowResponse executeWorkflowResponse;
         try {
             ServiceClient client = new ServiceClient(ServiceReferenceHolder.getInstance()
                     .getContextService().getClientConfigContext(), null);
@@ -122,6 +124,12 @@ public class SubscriptionCreationWSWorkflowExecutor extends WorkflowExecutor{
 
             client.fireAndForget(AXIOMUtil.stringToOM(payload));
 
+            if(WorkflowConstants.RESPONSE_TYPE_HTTP.equals(responseType)) {
+                executeWorkflowResponse = new HttpWorkflowResponse();
+            } else {
+                executeWorkflowResponse = new NonHttpWorkflowResponse();
+            }
+
             super.execute(workflowDTO);
         } catch (AxisFault axisFault) {
             log.error("Error sending out message", axisFault);
@@ -130,6 +138,8 @@ public class SubscriptionCreationWSWorkflowExecutor extends WorkflowExecutor{
             log.error("Error converting String to OMElement", e);
             throw new WorkflowException("Error converting String to OMElement", e);
         }
+
+        return executeWorkflowResponse;
     }
 
     @Override
@@ -138,7 +148,28 @@ public class SubscriptionCreationWSWorkflowExecutor extends WorkflowExecutor{
         workflowDTO.setUpdatedTime(System.currentTimeMillis());
         super.complete(workflowDTO);
         log.info("Subscription Creation [Complete] Workflow Invoked. Workflow ID : " + workflowDTO.getExternalWorkflowReference() + "Workflow State : "+ workflowDTO.getStatus());
+        checkStatusAndUpdate(workflowDTO);
+    }
 
+    @Override
+    public WorkflowResponse complete(WorkflowDTO workflowDTO, String responseType) throws WorkflowException {
+        WorkflowResponse completeWorkflowResponse;
+        workflowDTO.setUpdatedTime(System.currentTimeMillis());
+        super.complete(workflowDTO);
+        log.info("Subscription Creation [Complete] Workflow Invoked. Workflow ID : " + workflowDTO.getExternalWorkflowReference() + "Workflow State : "+ workflowDTO.getStatus());
+        checkStatusAndUpdate(workflowDTO);
+
+        if(WorkflowConstants.RESPONSE_TYPE_HTTP.equals(responseType)) {
+            completeWorkflowResponse = new HttpWorkflowResponse();
+        } else {
+            completeWorkflowResponse = new NonHttpWorkflowResponse();
+        }
+
+        return completeWorkflowResponse;
+
+    }
+
+    public void checkStatusAndUpdate(WorkflowDTO workflowDTO) throws WorkflowException {
         if(WorkflowStatus.APPROVED.equals(workflowDTO.getStatus())){
             ApiMgtDAO apiMgtDAO = new ApiMgtDAO();
             try {
