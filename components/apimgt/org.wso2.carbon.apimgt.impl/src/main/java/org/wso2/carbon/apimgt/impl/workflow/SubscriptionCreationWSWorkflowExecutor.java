@@ -41,16 +41,12 @@ import javax.xml.stream.XMLStreamException;
 import java.util.ArrayList;
 import java.util.List;
 
-public class SubscriptionCreationWSWorkflowExecutor extends WorkflowExecutor{
+public class SubscriptionCreationWSWorkflowExecutor extends WorkflowExecutor {
 
     private static final Log log = LogFactory.getLog(SubscriptionCreationWSWorkflowExecutor.class);
-
     private String serviceEndpoint;
-
     private String username;
-
     private String password;
-
     private String contentType;
 
     @Override
@@ -63,24 +59,60 @@ public class SubscriptionCreationWSWorkflowExecutor extends WorkflowExecutor{
         return null;
     }
 
+    /**
+     * This method is used to execute the workflow without giving a workflow response back to the caller to execute
+     * some other task after completing the workflow
+     *
+     * @param workflowDTO - The WorkflowDTO which contains workflow contextual information related to the workflow.
+     * @throws WorkflowException
+     */
     @Override
-    public WorkflowResponse execute(WorkflowDTO workflowDTO, String responseType) throws WorkflowException{
+    public void execute(WorkflowDTO workflowDTO) throws WorkflowException {
+        continueExecuteWorkflow(workflowDTO);
+    }
 
+    /**
+     * This method is used to complete the workflow by giving a workflow response back to the caller to execute
+     * some other task like redirecting after completing the workflow
+     *
+     * @param workflowDTO  The WorkflowDTO which contains workflow contextual information related to the workflow
+     * @param responseType Thrown when the workflow execution was not fully performed
+     * @return workflow response object according to the response type
+     * @throws WorkflowException
+     */
+    @Override
+    public WorkflowResponse execute(WorkflowDTO workflowDTO, String responseType) throws WorkflowException {
         WorkflowResponse executeWorkflowResponse;
+        continueExecuteWorkflow(workflowDTO);
+        if (WorkflowConstants.RESPONSE_TYPE_HTTP.equals(responseType)) {
+            executeWorkflowResponse = new HttpWorkflowResponse();
+        } else {
+            executeWorkflowResponse = new NonHttpWorkflowResponse();
+        }
+        return executeWorkflowResponse;
+    }
+
+    /**
+     * This method is used to perform execute workflow for both void and WorkflowResponse types
+     *
+     * @param workflowDTO - The WorkflowDTO which contains workflow contextual information related to the workflow.
+     * @throws WorkflowException
+     */
+    public void continueExecuteWorkflow(WorkflowDTO workflowDTO) throws WorkflowException {
         try {
             ServiceClient client = new ServiceClient(ServiceReferenceHolder.getInstance()
                     .getContextService().getClientConfigContext(), null);
             Options options = new Options();
             options.setAction("http://workflow.subscription.apimgt.carbon.wso2.org/initiate");
             options.setTo(new EndpointReference(serviceEndpoint));
-            if(contentType != null){
+            if (contentType != null) {
                 options.setProperty(Constants.Configuration.MESSAGE_TYPE, contentType);
             }
 
             HttpTransportProperties.Authenticator auth = new HttpTransportProperties.Authenticator();
 
             //Consider this as a secured service if username and password are not null. Unsecured if not.
-            if(username != null && password != null){
+            if (username != null && password != null) {
                 auth.setUsername(username);
                 auth.setPassword(password);
                 auth.setPreemptiveAuthentication(true);
@@ -88,7 +120,7 @@ public class SubscriptionCreationWSWorkflowExecutor extends WorkflowExecutor{
                 authSchemes.add(HttpTransportProperties.Authenticator.BASIC);
                 auth.setAuthSchemes(authSchemes);
 
-                if(contentType == null){
+                if (contentType == null) {
                     options.setProperty(Constants.Configuration.MESSAGE_TYPE, HTTPConstants.MEDIA_TYPE_APPLICATION_XML);
                 }
                 options.setProperty(org.apache.axis2.transport.http.HTTPConstants.AUTHENTICATE, auth);
@@ -109,10 +141,10 @@ public class SubscriptionCreationWSWorkflowExecutor extends WorkflowExecutor{
                     "         <wor:callBackURL>$9</wor:callBackURL>\n" +
                     "      </wor:SubscriptionApprovalWorkFlowProcessRequest>";
 
-            SubscriptionWorkflowDTO subsWorkflowDTO = (SubscriptionWorkflowDTO)workflowDTO;
+            SubscriptionWorkflowDTO subsWorkflowDTO = (SubscriptionWorkflowDTO) workflowDTO;
             String callBackURL = subsWorkflowDTO.getCallbackUrl();
 
-            payload = payload.replace("$1", subsWorkflowDTO.getApiName()) ;
+            payload = payload.replace("$1", subsWorkflowDTO.getApiName());
             payload = payload.replace("$2", subsWorkflowDTO.getApiVersion());
             payload = payload.replace("$3", subsWorkflowDTO.getApiContext());
             payload = payload.replace("$4", subsWorkflowDTO.getApiProvider());
@@ -124,12 +156,6 @@ public class SubscriptionCreationWSWorkflowExecutor extends WorkflowExecutor{
 
             client.fireAndForget(AXIOMUtil.stringToOM(payload));
 
-            if(WorkflowConstants.RESPONSE_TYPE_HTTP.equals(responseType)) {
-                executeWorkflowResponse = new HttpWorkflowResponse();
-            } else {
-                executeWorkflowResponse = new NonHttpWorkflowResponse();
-            }
-
             super.execute(workflowDTO);
         } catch (AxisFault axisFault) {
             log.error("Error sending out message", axisFault);
@@ -138,28 +164,45 @@ public class SubscriptionCreationWSWorkflowExecutor extends WorkflowExecutor{
             log.error("Error converting String to OMElement", e);
             throw new WorkflowException("Error converting String to OMElement", e);
         }
-
-        return executeWorkflowResponse;
     }
 
+
+    /**
+     * This method is used to complete the workflow without giving a workflow response back to the caller to execute
+     * some other task after completing the workflow
+     *
+     * @param workflowDTO - The WorkflowDTO which contains workflow contextual information related to the workflow.
+     * @throws WorkflowException
+     */
     @Override
     public void complete(WorkflowDTO workflowDTO) throws WorkflowException {
 
         workflowDTO.setUpdatedTime(System.currentTimeMillis());
         super.complete(workflowDTO);
-        log.info("Subscription Creation [Complete] Workflow Invoked. Workflow ID : " + workflowDTO.getExternalWorkflowReference() + "Workflow State : "+ workflowDTO.getStatus());
-        checkStatusAndUpdate(workflowDTO);
+        log.info("Subscription Creation [Complete] Workflow Invoked. Workflow ID : " + workflowDTO.getExternalWorkflowReference()
+                + "Workflow State : " + workflowDTO.getStatus());
+        continueCompleteWorkflow(workflowDTO);
     }
 
+    /**
+     * This method is used to complete the workflow by giving a workflow response back to the caller to execute
+     * some other task like redirecting after completing the workflow
+     *
+     * @param workflowDTO  The WorkflowDTO which contains workflow contextual information related to the workflow
+     * @param responseType Thrown when the workflow execution was not fully performed
+     * @return workflow response object according to the response type
+     * @throws WorkflowException
+     */
     @Override
     public WorkflowResponse complete(WorkflowDTO workflowDTO, String responseType) throws WorkflowException {
         WorkflowResponse completeWorkflowResponse;
         workflowDTO.setUpdatedTime(System.currentTimeMillis());
         super.complete(workflowDTO);
-        log.info("Subscription Creation [Complete] Workflow Invoked. Workflow ID : " + workflowDTO.getExternalWorkflowReference() + "Workflow State : "+ workflowDTO.getStatus());
-        checkStatusAndUpdate(workflowDTO);
+        log.info("Subscription Creation [Complete] Workflow Invoked. Workflow ID : " + workflowDTO.getExternalWorkflowReference()
+                + "Workflow State : " + workflowDTO.getStatus());
+        continueCompleteWorkflow(workflowDTO);
 
-        if(WorkflowConstants.RESPONSE_TYPE_HTTP.equals(responseType)) {
+        if (WorkflowConstants.RESPONSE_TYPE_HTTP.equals(responseType)) {
             completeWorkflowResponse = new HttpWorkflowResponse();
         } else {
             completeWorkflowResponse = new NonHttpWorkflowResponse();
@@ -169,8 +212,14 @@ public class SubscriptionCreationWSWorkflowExecutor extends WorkflowExecutor{
 
     }
 
-    public void checkStatusAndUpdate(WorkflowDTO workflowDTO) throws WorkflowException {
-        if(WorkflowStatus.APPROVED.equals(workflowDTO.getStatus())){
+    /**
+     * This method is used to perform complete workflow for both void and WorkflowResponse types
+     *
+     * @param workflowDTO - The WorkflowDTO which contains workflow contextual information related to the workflow.
+     * @throws WorkflowException
+     */
+    public void continueCompleteWorkflow(WorkflowDTO workflowDTO) throws WorkflowException {
+        if (WorkflowStatus.APPROVED.equals(workflowDTO.getStatus())) {
             ApiMgtDAO apiMgtDAO = new ApiMgtDAO();
             try {
                 apiMgtDAO.updateSubscriptionStatus(Integer.parseInt(workflowDTO.getWorkflowReference()),
@@ -179,7 +228,7 @@ public class SubscriptionCreationWSWorkflowExecutor extends WorkflowExecutor{
                 log.error("Could not complete subscription creation workflow", e);
                 throw new WorkflowException("Could not complete subscription creation workflow", e);
             }
-        }else if(WorkflowStatus.REJECTED.equals(workflowDTO.getStatus())){
+        } else if (WorkflowStatus.REJECTED.equals(workflowDTO.getStatus())) {
             ApiMgtDAO apiMgtDAO = new ApiMgtDAO();
             try {
                 apiMgtDAO.updateSubscriptionStatus(Integer.parseInt(workflowDTO.getWorkflowReference()),
