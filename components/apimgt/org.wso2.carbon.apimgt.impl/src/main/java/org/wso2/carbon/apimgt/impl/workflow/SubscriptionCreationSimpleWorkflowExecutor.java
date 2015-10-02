@@ -43,6 +43,27 @@ public class SubscriptionCreationSimpleWorkflowExecutor extends WorkflowExecutor
         return null;
     }
 
+    /**
+     * This method executes subscription creation simple workflow without returning
+     *
+     * @param workflowDTO - The WorkflowDTO which contains workflow contextual information related to the workflow.
+     * @throws WorkflowException Thrown when the workflow execution was not fully performed
+     */
+    @Override
+    public void execute(WorkflowDTO workflowDTO) throws WorkflowException {
+        workflowDTO.setStatus(WorkflowStatus.APPROVED);
+        complete(workflowDTO);
+        super.publishEvents(workflowDTO);
+    }
+
+    /**
+     * This method executes subscription creation simple workflow and return workflow response back to the caller
+     *
+     * @param workflowDTO  The WorkflowDTO which contains workflow contextual information related to the workflow
+     * @param responseType Type of the response to be returned after the workflow execution
+     * @return workflow response back to the caller
+     * @throws WorkflowException Thrown when the workflow execution was not fully performed
+     */
     @Override
     public WorkflowResponse execute(WorkflowDTO workflowDTO, String responseType) throws WorkflowException {
         workflowDTO.setStatus(WorkflowStatus.APPROVED);
@@ -52,15 +73,41 @@ public class SubscriptionCreationSimpleWorkflowExecutor extends WorkflowExecutor
         return workflowResponse;
     }
 
+    /**
+     * This method completes subscription creation simple workflow without returning
+     *
+     * @param workflowDTO - The WorkflowDTO which contains workflow contextual information related to the workflow.
+     * @throws WorkflowException Thrown when the workflow execution was not fully performed
+     */
     @Override
-    public WorkflowResponse complete(WorkflowDTO workflowDTO, String responseType) throws WorkflowException{
+    public void complete(WorkflowDTO workflowDTO) throws WorkflowException {
+        ApiMgtDAO apiMgtDAO = new ApiMgtDAO();
+        try {
+            apiMgtDAO.updateSubscriptionStatus(Integer.parseInt(workflowDTO.getWorkflowReference()),
+                    APIConstants.SubscriptionStatus.UNBLOCKED);
+        } catch (APIManagementException e) {
+            log.error("Could not complete subscription creation workflow", e);
+            throw new WorkflowException("Could not complete subscription creation workflow", e);
+        }
+    }
+
+    /**
+     * This method completes subscription creation simple workflow and return workflow response back to the caller
+     *
+     * @param workflowDTO  The WorkflowDTO which contains workflow contextual information related to the workflow
+     * @param responseType Thrown when the workflow execution was not fully performed
+     * @return workflow response back to the caller
+     * @throws WorkflowException
+     */
+    @Override
+    public WorkflowResponse complete(WorkflowDTO workflowDTO, String responseType) throws WorkflowException {
         ApiMgtDAO apiMgtDAO = new ApiMgtDAO();
         WorkflowResponse workflowResponse;
         try {
             apiMgtDAO.updateSubscriptionStatus(Integer.parseInt(workflowDTO.getWorkflowReference()),
                     APIConstants.SubscriptionStatus.UNBLOCKED);
 
-            if(WorkflowConstants.RESPONSE_TYPE_HTTP.equals(responseType)) {
+            if (WorkflowConstants.RESPONSE_TYPE_HTTP.equals(responseType)) {
                 workflowResponse = new HttpWorkflowResponse();
             } else {
                 workflowResponse = new NonHttpWorkflowResponse();
