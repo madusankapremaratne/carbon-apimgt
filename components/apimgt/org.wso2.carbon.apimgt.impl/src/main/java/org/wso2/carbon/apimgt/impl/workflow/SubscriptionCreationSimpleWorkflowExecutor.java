@@ -39,7 +39,7 @@ public class SubscriptionCreationSimpleWorkflowExecutor extends WorkflowExecutor
     }
 
     @Override
-    public List<WorkflowDTO> getWorkflowDetails(String workflowStatus) throws WorkflowException{
+    public List<WorkflowDTO> getWorkflowDetails(String workflowStatus) throws WorkflowException {
         return null;
     }
 

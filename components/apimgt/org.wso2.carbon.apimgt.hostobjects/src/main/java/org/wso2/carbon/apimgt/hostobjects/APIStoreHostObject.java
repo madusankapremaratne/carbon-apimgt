@@ -2414,7 +2414,7 @@ public class APIStoreHostObject extends ScriptableObject {
     }
 
     public static NativeArray jsFunction_addSubscription(Context cx,
-                                                    Scriptable thisObj, Object[] args, Function funObj)
+                                                         Scriptable thisObj, Object[] args, Function funObj)
             throws APIManagementException {
 
         NativeArray addSubscriptionResults = new NativeArray(0);
@@ -2492,7 +2492,7 @@ public class APIStoreHostObject extends ScriptableObject {
 
             NativeObject nativeObject = new NativeObject();
             WorkflowResponse addSubscriptionResponse = apiConsumer.addSubscription(apiIdentifier, userId, applicationId, responseType);
-            if(addSubscriptionResponse instanceof HttpWorkflowResponse) {
+            if (addSubscriptionResponse instanceof HttpWorkflowResponse) {
                 redirectUrl = ((HttpWorkflowResponse) addSubscriptionResponse).getRedirectUrl();
                 if (redirectUrl == null) {
                     log.warn("Redirect url is not specified in http workflow response");

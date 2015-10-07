@@ -81,7 +81,7 @@ public abstract class WorkflowExecutor implements Serializable {
         }
 
         WorkflowResponse workflowResponse;
-        if(WorkflowConstants.RESPONSE_TYPE_HTTP.equals(responseType)){
+        if (WorkflowConstants.RESPONSE_TYPE_HTTP.equals(responseType)) {
             workflowResponse = new HttpWorkflowResponse();
         } else {
             workflowResponse = new NonHttpWorkflowResponse();
@@ -123,7 +123,7 @@ public abstract class WorkflowExecutor implements Serializable {
         }
 
         WorkflowResponse workflowResponse;
-        if(WorkflowConstants.RESPONSE_TYPE_HTTP.equals(responseType)){
+        if (WorkflowConstants.RESPONSE_TYPE_HTTP.equals(responseType)) {
             workflowResponse = new HttpWorkflowResponse();
         } else {
             workflowResponse = new NonHttpWorkflowResponse();

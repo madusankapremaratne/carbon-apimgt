@@ -2010,12 +2010,10 @@ class APIConsumerImpl extends AbstractAPIManager implements APIConsumer {
             throw new APIManagementException("Subscriptions not allowed on APIs in the state: " + api.getStatus().getStatus());
         }
 
-        if(WorkflowConstants.RESPONSE_TYPE_HTTP.equals(responseType)) {
-            HttpWorkflowResponse httpWorkflowResponse = (HttpWorkflowResponse)workflowResponse;
-            httpWorkflowResponse.setWorkflowOutput(apiMgtDAO.getSubscriptionStatusById(subscriptionId));
+        if (WorkflowConstants.RESPONSE_TYPE_HTTP.equals(responseType)) {
+            ((HttpWorkflowResponse) workflowResponse).setWorkflowOutput(apiMgtDAO.getSubscriptionStatusById(subscriptionId));
         } else {
-            NonHttpWorkflowResponse nonHttpWorkflowResponse = (NonHttpWorkflowResponse)workflowResponse;
-            nonHttpWorkflowResponse.setWorkflowOutput(apiMgtDAO.getSubscriptionStatusById(subscriptionId));
+            ((NonHttpWorkflowResponse) workflowResponse).setWorkflowOutput(apiMgtDAO.getSubscriptionStatusById(subscriptionId));
         }
 
         return workflowResponse;
